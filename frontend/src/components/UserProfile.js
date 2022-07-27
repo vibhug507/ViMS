@@ -4,11 +4,10 @@ import './UserProfile.css'
 
 function UserProfile(){
 
-    const [user, setUser] = useState({name: "Vibhu Garg", enrollmentNumber: "IIT2020028", email: "vibhugarg507@gmail.com", password: "jvsdnv",
-                                      contactNumber: "7982773137", address: "Ghaziabad, India"});
+    const [user, setUser] = useState({name: "", enrollmentNumber: "", email: "", 
+                                      password: "", contactNumber: "", address: ""});
 
     const navigate = useNavigate();
-
 
     useEffect(
         function(){
@@ -17,14 +16,14 @@ function UserProfile(){
             .then((res) => res.json())
             .then((json) => {
                 console.log(json);
-                if(!json.loggedIn){
+                if(!json.isLoggedIn){
                     navigate('/login');
                 }
                 else{
-                    setUser(json.user);
+                    setUser(json.loggedInUser);
                 }
             })
-        }
+        }, [navigate]
     )
 
     const [visit, setVisit] = useState({secondPerson: "", duration: "", startTime: ""});
@@ -43,10 +42,19 @@ function UserProfile(){
         })
     }
 
+    function logout(event){
+        event.preventDefault();
+        fetch('http://localhost:3050/logout', {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(user)
+        })
+        navigate('/login');
+    }
+
     return(
     <div className="container mt-5">
             <h2 className="profile-label">Your Profile</h2>
-            <button className="logoutButton"><a href="/login">Logout</a></button>
+            <button className="logoutButton" onClick={logout}>Logout</button>
             <div className="about-info">
                 <div>
                     <div className="row mt-3">

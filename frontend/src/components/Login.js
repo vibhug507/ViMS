@@ -36,11 +36,11 @@ function Login(){
             .then((res) => res.json())
             .then((json) => {
                 console.log(json);
-                if(json.loggedIn){
+                if(json.isLoggedIn){
                     navigate('/userProfile');
                 }
             })
-        }
+        }, [navigate]
     )
     
     return(

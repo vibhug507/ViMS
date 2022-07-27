@@ -25,7 +25,7 @@ function Signup(){
         fetch('http://localhost:3050/signup', {method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify(
-              {name, enrollmentNumber, email, password, contactNumber, address}
+                {name, enrollmentNumber, email, password, contactNumber, address}
               )
         });
 

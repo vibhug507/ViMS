@@ -3,8 +3,6 @@ const mysql = require('mysql');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
 const cors = require('cors');
 
 dotenv.config({path: './config.env'});
@@ -37,21 +35,13 @@ app.use(cors(
         credentials: true
     }
 ));
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(session({
-    key: "userId",
-    secret: "helloworld",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 60 * 60 * 24
-    }
-}))
 
-// Form validation to be done
 app.post('/signup', function(req, res){
     const {name, enrollmentNumber, email, password, contactNumber, address} = req.body;
+
+    if(!name || !enrollmentNumber || !email || !password || !contactNumber || !address){
+        return;
+    }
 
     var sql = `INSERT INTO visitorTable (Name, EnrollmentNumber, Email, Password, ContactNum, Address) VALUES 
             ('${name}', '${enrollmentNumber}', '${email}', '${password}', '${contactNumber}', '${address}');`;
@@ -61,43 +51,50 @@ app.post('/signup', function(req, res){
     });
 });
 
-// Form validation to be done
+var isLoggedIn = false;
+var loggedInUser = {
+    name: "", enrollmentNumber: "", email: "", 
+    password: "", contactNumber: "", address: ""
+};
+
 app.post('/login', function(req, res){
     const {email, password} = req.body;
 
     var sql = `SELECT * FROM visitorTable WHERE Email = '${email}' AND Password = '${password}';`;
 
     conn.query(sql, function (err, result) {
-        if(err || !result || result[0].Password != password) {
+        if(err || !result || result[0].Password != password || isLoggedIn) {
             console.log('Login Unsuccessful.');
         }
         else {
-            req.session.user = result;
-            console.log(req.session.user);
+            isLoggedIn = true;
+            loggedInUser.email = result[0].Email;
+            loggedInUser.password = result[0].Password;
+            loggedInUser.name = result[0].Name;
+            loggedInUser.contactNumber = result[0].ContactNum;
+            loggedInUser.address = result[0].Address;
+            loggedInUser.enrollmentNumber = result[0].EnrollmentNumber;
+            console.log(loggedInUser);
             console.log('Login Successful');
         }
     });
 });
 
 app.get('/login', function(req, res){
-    if(req.session.user){
-        console.log('hi1');
-        res.send({loggedIn: true, user: req.session.user});
+    if(isLoggedIn){
+        res.send({isLoggedIn, loggedInUser});
     }
     else{
-        console.log('hi2');
-        res.send({loggedIn: false});
+        res.send({isLoggedIn, loggedInUser});
     }
 });
 
 
-// Admin email: vibhugarg507@gmail.com
-// Team email: iit2020028@iiita.ac.in
 var transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'Yandex',
     auth: {
-      user: 'iit2020028@iiita.ac.in',
-      pass: 'seproject'
+      user: 'vibhugarg507@yandex.com',
+      pass: 'helloseworldproject'
     }
 });
 
@@ -106,8 +103,8 @@ app.post('/contact', function(req, res){
     const {name, email, phone, message} = req.body;
 
     var mailOptions = {
-        from: 'iit2020028@iiita.ac.in',
-        to: 'vibhugarg507@gmail.com',
+        from: 'vibhugarg507@yandex.com',
+        to: email,
         subject: 'Contact Message',
         text: `Sender's Name: ${name}
                Sender's Email: ${email}
@@ -133,7 +130,7 @@ app.post('/scheduleVisit', function(req, res){
     const {secondPerson, duration, StartTime, email} = req.body;
       
     var mailOptions = {
-        from: 'iit2020028@iiita.ac.in',
+        from: 'vibhugarg507@yandex.com',
         to: email,
         subject: 'Visitor Pass',
         text: `VisitorID : ${id}.`
@@ -149,6 +146,16 @@ app.post('/scheduleVisit', function(req, res){
     });
 
     id += 1;
+});
+
+app.post('/logout', function(req, res){
+    isLoggedIn = false;
+    loggedInUser.name = "";
+    loggedInUser.enrollmentNumber = "";
+    loggedInUser.email = "";
+    loggedInUser.password = "";
+    loggedInUser.contactNumber = "";
+    loggedInUser.address = "";
 });
 
 

@@ -1,12 +1,7 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const mysql = require('mysql');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
-const jwt = require('jsonwebtoken');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
 
 const router = express.Router();
 
@@ -28,58 +23,92 @@ conn.connect(function(err){
     else console.log('Connected to database');
 });
 
-// Form validation to be done
 router.post('/signup', function(req, res){
-    console.log(req);
     const {name, enrollmentNumber, email, password, contactNumber, address} = req.body;
 
-    password = bcrypt.hash(password, 12);
+    if(!name || !enrollmentNumber || !email || !password || !contactNumber || !address){
+        return;
+    }
 
     var sql = `INSERT INTO visitorTable (Name, EnrollmentNumber, Email, Password, ContactNum, Address) VALUES 
             ('${name}', '${enrollmentNumber}', '${email}', '${password}', '${contactNumber}', '${address}');`;
     conn.query(sql, function (err, result) {
-        if(err) console.log('Signup Unsuccessful.');
+        if(err) console.log(err);
         else console.log('Signup Successful');
     });
 });
 
-// Form validation to be done
+var isLoggedIn = false;
+var loggedInUser = {
+    name: "", enrollmentNumber: "", email: "", 
+    password: "", contactNumber: "", address: ""
+};
+
 router.post('/login', function(req, res){
     const {email, password} = req.body;
 
     var sql = `SELECT * FROM visitorTable WHERE Email = '${email}' AND Password = '${password}';`;
-    var sql2 = "SELECT PASSWORD FROM visitorTable WHERE Email = '" + email + ";";
-
-    conn.query(sql2, function (err, result) {
-        if(err || !bcrypt.compare(result[0].Password, password)) console.log('Login Unsuccessful.');
-        else console.log('Login Successful');
-    });
-
 
     conn.query(sql, function (err, result) {
-        if(err) console.log('Login Unsuccessful.');
-        else console.log('Login Successful');
+        if(err || !result || result[0].Password != password || isLoggedIn) {
+            console.log('Login Unsuccessful.');
+        }
+        else {
+            isLoggedIn = true;
+            loggedInUser.email = result[0].Email;
+            loggedInUser.password = result[0].Password;
+            loggedInUser.name = result[0].Name;
+            loggedInUser.contactNumber = result[0].ContactNum;
+            loggedInUser.address = result[0].Address;
+            loggedInUser.enrollmentNumber = result[0].EnrollmentNumber;
+            console.log(loggedInUser);
+            console.log('Login Successful');
+        }
     });
 });
 
-
-router.post('/changePass', function(req, res){
-    const {password, email} = req.body;
-
-    var sql = `UPDATE visitorTable SET Password = '${password}' WHERE Email = '${email}';`;
-
-    conn.query(sql, function (err, result) {
-        if(err) console.log('Password could not be changed.');
-        else console.log('Password changed successfully.');
-    });
+router.get('/login', function(req, res){
+    if(isLoggedIn){
+        res.send({isLoggedIn, loggedInUser});
+    }
+    else{
+        res.send({isLoggedIn, loggedInUser});
+    }
 });
+
 
 var transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'Yandex',
     auth: {
-      user: 'iit2020028@iiita.ac.in',
-      pass: 'seproject'
+      user: 'vibhugarg507@yandex.com',
+      pass: 'helloseworldproject'
     }
+});
+
+router.post('/contact', function(req, res){
+
+    const {name, email, phone, message} = req.body;
+
+    var mailOptions = {
+        from: 'vibhugarg507@yandex.com',
+        to: email,
+        subject: 'Contact Message',
+        text: `Sender's Name: ${name}
+               Sender's Email: ${email}
+               Sender's Phone No.: ${phone}
+               Message: ${message}.`
+    };
+      
+    transporter.sendMail(mailOptions, function(err, info){
+        if (err){
+            console.log(err);
+        }
+        else{
+            console.log('Email sent: ' + info.response);
+        }
+    });
+
+
 });
 
 var id = 1;
@@ -88,31 +117,32 @@ router.post('/scheduleVisit', function(req, res){
     const {secondPerson, duration, StartTime, email} = req.body;
       
     var mailOptions = {
-        from: 'iit2020028@iiita.ac.in',
+        from: 'vibhugarg507@yandex.com',
         to: email,
         subject: 'Visitor Pass',
         text: `VisitorID : ${id}.`
     };
       
     transporter.sendMail(mailOptions, function(err, info){
-        if (err) console.log(err);
-        else console.log('Email sent: ' + info.response);
+        if (err){
+            console.log(err);
+        }
+        else{
+            console.log('Email sent: ' + info.response);
+        }
     });
 
     id += 1;
 });
 
-router.post('/updateDetails', function(req, res){
-    const {name, enrollmentNumber, email, password, contactNumber, address, prevEmail} = req.body;
-
-    password = bcrypt.hash(password, 12);
-
-    var sql = `UPDATE visitorTable SET Name = '${name}', EnrollmentNumber = '${enrollmentNumber}', Email = '${email}', 
-               Password = '${password}', ContactNum = '${contactNumber}', Address = '${address}' WHERE Email = ${prevEmail};`;
-    conn.query(sql, function (err, result) {
-        if(err) console.log('Details could not be updated.');
-        else console.log('Details updated successfully.');
-    });
+router.post('/logout', function(req, res){
+    isLoggedIn = false;
+    loggedInUser.name = "";
+    loggedInUser.enrollmentNumber = "";
+    loggedInUser.email = "";
+    loggedInUser.password = "";
+    loggedInUser.contactNumber = "";
+    loggedInUser.address = "";
 });
 
 module.exports = router;
