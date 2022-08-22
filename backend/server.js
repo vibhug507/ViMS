@@ -4,6 +4,10 @@ const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const session = require('express-session');
+const passport = require('passport');
+const localStrategy = require('passport-local');
+const bcrypt = require('bcryptjs');
 
 dotenv.config({path: './config.env'});
 const host = process.env.H;
@@ -35,6 +39,16 @@ app.use(cors(
         credentials: true
     }
 ));
+app.use(bodyParser.urlencoded({extended: true}));
+
+// app.use(session({
+//     secret: 'secret key',
+//     resave: false,
+//     saveUninitialized: true
+// }));
+
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 app.post('/signup', function(req, res){
     const {name, enrollmentNumber, email, password, contactNumber, address} = req.body;
@@ -43,12 +57,16 @@ app.post('/signup', function(req, res){
         return;
     }
 
-    var sql = `INSERT INTO visitorTable (Name, EnrollmentNumber, Email, Password, ContactNum, Address) VALUES 
-            ('${name}', '${enrollmentNumber}', '${email}', '${password}', '${contactNumber}', '${address}');`;
-    conn.query(sql, function (err, result) {
-        if(err) console.log(err);
-        else console.log('Signup Successful');
+    bcrypt.hash(password, 12).then(function(pass){
+        var sql = `INSERT INTO visitorTable (Name, EnrollmentNumber, Email, Password, ContactNum, Address) VALUES 
+        ('${name}', '${enrollmentNumber}', '${email}', '${pass}', '${contactNumber}', '${address}');`;
+        conn.query(sql, function (err, result) {
+            if(err) console.log(err);
+            else console.log('Signup Successful');
+        });
+        return;
     });
+
 });
 
 var isLoggedIn = false;
@@ -60,24 +78,35 @@ var loggedInUser = {
 app.post('/login', function(req, res){
     const {email, password} = req.body;
 
-    var sql = `SELECT * FROM visitorTable WHERE Email = '${email}' AND Password = '${password}';`;
+    if(!email || !password){
+        return;
+    }
 
-    conn.query(sql, function (err, result) {
-        if(err || !result || result[0].Password != password || isLoggedIn) {
-            console.log('Login Unsuccessful.');
-        }
-        else {
-            isLoggedIn = true;
-            loggedInUser.email = result[0].Email;
-            loggedInUser.password = result[0].Password;
-            loggedInUser.name = result[0].Name;
-            loggedInUser.contactNumber = result[0].ContactNum;
-            loggedInUser.address = result[0].Address;
-            loggedInUser.enrollmentNumber = result[0].EnrollmentNumber;
-            console.log(loggedInUser);
-            console.log('Login Successful');
+    var sql = `SELECT Password FROM visitorTable WHERE Email = '${email}';`;
+
+    conn.query(sql, function(err, result){
+        if(err) console.log('Login Unsuccessful.');
+        else{
+            bcrypt.compare(password, result[0].Password).then(function(value){
+                if(value){
+                    var sql2 = `SELECT * FROM visitorTable WHERE Email = '${email}';`;
+                    conn.query(sql2, function (err, result) {
+                        if(err){
+                            console.log('Login Unsuccessful.');
+                        }
+                        else{
+                            isLoggedIn = true;
+                            loggedInUser = result[0];
+                            console.log(loggedInUser);
+                            console.log('Login Successful');
+                        }
+                    });
+                }
+                else console.log('Invalid Password.');
+            });
         }
     });
+
 });
 
 app.get('/login', function(req, res){
