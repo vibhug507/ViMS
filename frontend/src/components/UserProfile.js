@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import './UserProfile.css'
+import Navbar from './Navbar.js';
 
-function UserProfile(){
+function UserProfile(props){
 
     const [user, setUser] = useState({name: "", enrollmentNumber: "", email: "", 
                                       password: "", contactNumber: "", address: ""});
@@ -11,7 +12,6 @@ function UserProfile(){
 
     useEffect(
         function(){
-            console.log('hi');
             fetch('http://localhost:3050/login', {method: 'GET'})
             .then((res) => res.json())
             .then((json) => {
