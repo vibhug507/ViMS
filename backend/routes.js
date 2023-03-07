@@ -2,8 +2,10 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const conn = require('./db.js').conn;
 const passwordUtils = require('./passwordUtils');
+const dotenv = require('dotenv');
 
 const router = express.Router();
+dotenv.config({path: './config.env'});
 
 router.post('/signup', async function(req, res){
     var sql = `SELECT * FROM visitorTable WHERE email = '${req.email}';`;
@@ -15,7 +17,6 @@ router.post('/signup', async function(req, res){
 
     if(name && enrollmentNumber && email && password && contactNumber && address && !duplicateEmail){
         const saltHash = passwordUtils.generatePassword(password);
-  
         const salt = saltHash.salt;
         const hash = saltHash.hash;
     
@@ -51,18 +52,17 @@ router.post('/login', function(req, res, next){
 var transporter = nodemailer.createTransport({
     service: 'Yandex',
     auth: {
-      user: 'vibhugarg507@yandex.com',
-      pass: 'helloseworldproject'
+      user: process.env.ADMIN_MAIL,
+      pass: process.env.ADMIN_PASS
     }
 });
 
 router.post('/contact', function(req, res){
-
     const {name, email, phone, message} = req.body;
 
     var mailOptions = {
-        from: 'vibhugarg507@yandex.com',
-        to: email,
+        from: process.env.ADMIN_MAIL,
+        to: 'vibhugarg507@gmail.com',
         subject: 'Contact Message',
         text: `Sender's Name: ${name}
                Sender's Email: ${email}
@@ -71,32 +71,31 @@ router.post('/contact', function(req, res){
     };
       
     transporter.sendMail(mailOptions, function(err, info){
-        if (err){
-            console.log(err);
+        if(err){
+            res.send({status: 'fail'});
         }
         else{
             console.log('Email sent: ' + info.response);
+            res.send({status: 'success'});
         }
     });
-
-
 });
 
-var id = 1;
-
 router.post('/scheduleVisit', function(req, res){
-    const {secondPerson, duration, StartTime, email} = req.body;
+    const {secondPerson, duration, startTime, email} = req.body;
       
     var mailOptions = {
-        from: 'vibhugarg507@yandex.com',
+        from: process.env.ADMIN_MAIL,
         to: email,
         subject: 'Visitor Pass',
-        text: `VisitorID : ${id}.`
+        text: `Meeting between ${req.name} and ${secondPerson}:
+               VisitorID : ${Math.random().toString(36).substring(2, 12)}.
+               Duration : ${duration} minutes.
+               Time: ${startTime}.`
     };
       
     transporter.sendMail(mailOptions, function(err, info){
         if (err){
-            console.log(err);
             res.send({ status : 'fail'});
         }
         else{
@@ -104,8 +103,6 @@ router.post('/scheduleVisit', function(req, res){
             res.send({ status : 'success'});
         }
     });
-
-    id += 1;
 });
 
 router.get('/isLoggedIn', (req, res) => {

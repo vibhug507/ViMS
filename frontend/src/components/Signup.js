@@ -37,6 +37,7 @@ function Signup(){
         else{
             alert('Account already exists or the entered details are invalid.');
         }
+        setUser({name: '', enrollmentNumber: '', email: '', password: '', contactNumber: '', address: '' });
     };
 
     if(!registerStatus){
@@ -57,7 +58,7 @@ function Signup(){
                                     <div className='txt_field'>
                                         <input type='text' name='enrollmentNumber' value={user.enrollmentNumber} onChange={inputHandler} required />
                                         <span></span>
-                                        <label><i class='zmdi zmdi-graduation-cap'></i> Enrollment Number</label>
+                                        <label><i className='zmdi zmdi-graduation-cap'></i> Enrollment Number</label>
                                     </div>
                                     <div className='txt_field'>
                                         <input type='text' name='email' value={user.email} onChange={inputHandler} required />
@@ -77,7 +78,7 @@ function Signup(){
                                     <div className='txt_field'>
                                         <input type='text' name='address' value={user.address} onChange={inputHandler} required />
                                         <span></span>
-                                        <label><i class='zmdi zmdi-pin'></i> Address</label>
+                                        <label><i className='zmdi zmdi-pin'></i> Address</label>
                                     </div>
                                     <div className='submitButton'>
                                         <input type='submit' onClick={postData} value='Signup' name='signup'/>

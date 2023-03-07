@@ -7,7 +7,7 @@ function Navbar(){
     return(
             <div>
                 <nav className='navbar navbar-expand-lg navbar-dark bg-dark'>
-                    <NavLink className="navbar-brand" to='/'>
+                    <NavLink className='navbar-brand' to='/'>
                         <img src={logo} alt='logo' />
                     </NavLink>
                     <div className='container-fluid'>

@@ -42,12 +42,14 @@ function UserProfile(props){
             body: JSON.stringify(visit)
         });
         const parsedResult = await result.json();
-        if(parsedResult.status == 'success'){
+        setVisit({secondPerson: '', duration: '', startTime: ''});
+        if(parsedResult.status === 'success'){
             alert('Visit Scheduled');
         }
         else{
             alert('Visit could not scheduled. Please try again.');
         }
+
     }
 
     if(isLoggedIn && loggedInUser){

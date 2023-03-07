@@ -21,7 +21,7 @@ function Contact(){
         });
 
         const parsedResult = await result.json();
-        if(parsedResult.status){
+        if(parsedResult.status === 'success'){
             alert('Message Sent Successfully.');
         }
         else{
