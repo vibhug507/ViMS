@@ -15,13 +15,13 @@ function Contact(){
         event.preventDefault();
         const {name, email, phone, message} = userData;
 
-        const res = await fetch('http://localhost:3050/contact', {
+        const result = await fetch('http://localhost:3050/contact', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name, email, phone, message})
         });
 
-        const parsedRes = await res.json();
-        if(parsedRes.status){
+        const parsedResult = await result.json();
+        if(parsedResult.status){
             alert('Message Sent Successfully.');
         }
         else{

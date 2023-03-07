@@ -97,9 +97,11 @@ router.post('/scheduleVisit', function(req, res){
     transporter.sendMail(mailOptions, function(err, info){
         if (err){
             console.log(err);
+            res.send({ status : 'fail'});
         }
         else{
             console.log('Email sent: ' + info.response);
+            res.send({ status : 'success'});
         }
     });
 
