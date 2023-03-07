@@ -7,7 +7,7 @@ import UserProfile from './components/UserProfile';
 import './App.css';
 import {
   BrowserRouter as Router,
-  Switch,
+  Routes,
   Route
 } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ function App() {
       async function fetchData(){
         const res = await fetch('http://localhost:3050/isLoggedIn', {method: 'GET'});
         const parsedResult = await res.json();
+        console.log(parsedResult);
         setLoggedIn(parsedResult.isLoggedIn);
       };
       fetchData();
@@ -32,27 +33,17 @@ function App() {
 
     return (
       <Router>
-        <Switch>
-          <Route exact path='/register'>
-            <Signup />
-          </Route>
-          <Route exact path='/userProfile'>
+        <Routes>
+          <Route path='/register' element={<Signup />} />
+          <Route path='/userProfile' element={<UserProfile logoutPressed={logoutPressed} />} />
+          <Route path='/login' element={!loggedIn ? (
+            <Login loginPressed={loginPressed} loggedIn={loggedIn} />
+          ) : (
             <UserProfile logoutPressed={logoutPressed} />
-          </Route>
-          <Route exact path='/login'>
-            {!loggedIn ? (
-              <Login loginPressed={loginPressed} loggedIn={loggedIn} />
-            ) : (
-              <UserProfile logoutPressed={logoutPressed} />
-            )}
-          </Route>
-          <Route exact path='/'>
-            {loggedIn ? <UserProfile logoutPressed={logoutPressed} /> : <Home />}
-          </Route>
-          <Route exact path='/contact'>
-            <Contact />
-          </Route>
-        </Switch>
+          )} />
+          <Route path='/' element={loggedIn ? <UserProfile logoutPressed={logoutPressed} /> : <Home />} />
+          <Route path='/contact' element={<Contact />} />
+        </Routes>
       </Router>
     );
 }

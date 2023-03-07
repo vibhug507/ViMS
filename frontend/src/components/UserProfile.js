@@ -1,140 +1,142 @@
-import React, {useState, useEffect} from 'react';
-import {useNavigate} from 'react-router-dom';
+import React, {useState, useEffect, useRef} from 'react';
+import {Navigate} from 'react-router-dom';
 import './UserProfile.css'
-import Navbar from './Navbar.js';
+import NavbarWLogout from './NavbarWLogout.js';
+import PropTypes from 'prop-types';
 
 function UserProfile(props){
+    let loggedIn = useRef(null);
+    const [isLoggedIn, setLoggedIn] = useState(loggedIn);
+    const [loggedInUser, setLoggedInUser] = useState({});
 
-    const [user, setUser] = useState({name: "", enrollmentNumber: "", email: "", 
-                                      password: "", contactNumber: "", address: ""});
+    useEffect(() => {
+        async function fetchData() {
+          const result = await fetch('http://localhost:3050/isLoggedIn', { method: 'GET' });
+          const parsedResult = await result.json();
+          loggedIn.current = parsedResult.isLoggedIn;
+    
+          setLoggedInUser(parsedResult.user);
+          setLoggedIn(loggedIn.current);
+        }
+        fetchData();
+    }, []);
 
-    const navigate = useNavigate();
+    const logoutPressed = () => {
+        setLoggedIn(false);
+        setLoggedInUser(null);
+        props.logoutPressed();
+    };
 
-    useEffect(
-        function(){
-            fetch('http://localhost:3050/login', {method: 'GET'})
-            .then((res) => res.json())
-            .then((json) => {
-                console.log(json);
-                if(!json.isLoggedIn){
-                    navigate('/login');
-                }
-                else{
-                    setUser(json.loggedInUser);
-                }
-            })
-        }, [navigate]
-    )
-
-    const [visit, setVisit] = useState({secondPerson: "", duration: "", startTime: ""});
+    const [visit, setVisit] = useState({secondPerson: '', duration: '', startTime: ''});
 
     function inputHandler(event){
         let fieldName = event.target.name;
         let value = event.target.value;
-        setVisit({...user, [fieldName]: value});
+        setVisit({...visit, [fieldName]: value});
     }
 
-    function scheduleVisit(event){
+    async function scheduleVisit(event){
         event.preventDefault();
-        fetch('http://localhost:3050/scheduleVisit', {method: 'POST',
+        const result = await fetch('http://localhost:3050/scheduleVisit', {method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(visit)
-        })
+        });
+        const parsedResult = await result.json();
     }
 
-    function logout(event){
-        event.preventDefault();
-        fetch('http://localhost:3050/logout', {method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(user)
-        })
-        navigate('/login');
-    }
+    if(isLoggedIn && loggedInUser){
+        return(
+            <div>
+                <NavbarWLogout logoutPressed={logoutPressed} />
+                <div className='container mt-5'>
+                        <h2 className='profile-label'>Your Profile</h2>
+                        <div className='about-info'>
+                            <div>
+                                <div className='row mt-3'>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>Name</p>
+                                    </div>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>{loggedInUser.name}</p>
+                                    </div>
+                                </div>
 
-    return(
-    <div className="container mt-5">
-            <h2 className="profile-label">Your Profile</h2>
-            <button className="logoutButton" onClick={logout}>Logout</button>
-            <div className="about-info">
-                <div>
-                    <div className="row mt-3">
-                        <div className="col-md-6">
-                            <p className="lbl">Name</p>
+                                <div className='row mt-3'>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>Enrollment Number</p>
+                                    </div>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>{loggedInUser.enrollmentNumber}</p>
+                                    </div>
+                                </div>
+
+                                <div className='row mt-3'>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>Email</p>
+                                    </div>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>{loggedInUser.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className='row mt-3'>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>Contact Number</p>
+                                    </div>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>{loggedInUser.contactNumber}</p>
+                                    </div>
+                                </div>
+
+                                <div className='row mt-3'>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>Address</p>
+                                    </div>
+                                    <div className='col-md-6'>
+                                        <p className='lbl'>{loggedInUser.address}</p>
+                                    </div>
+                                </div>    
+                            
+                            </div>
                         </div>
-                        <div className="col-md-6 ">
-                            <p className="lbl">{user.name}</p>
-                        </div>
+
+                    <div className='signin-form'>
+                        <h2 className='form-title'>Schedule a Visit</h2>
+                        <p className='visitInstructions'><i>Enter the following details to schedule a visit. If the visit is possible, then check your email for the issue pass.</i></p>
+                        <form method='POST' className='register-form' id='register-form'>
+                            <div className='txt_field'>
+                                <input type='text' name='secondPerson' value={visit.secondPerson} onChange={inputHandler} required />
+                                <span></span>
+                                <label>Second Person</label>
+                            </div>
+                            <div className='txt_field'>
+                                <input type='text' name='duration' value={visit.duration} onChange={inputHandler} required />
+                                <span></span>
+                                <label>Duration (in minutes)</label>
+                            </div>
+                            <div className='txt_field'>
+                                <input type='text' name='startTime' value={visit.startTime} onChange={inputHandler} required />
+                                <span></span>
+                                <label>Start Time (format : HH:MM)</label>
+                            </div>
+                            <div className='scheduleButton'>
+                                <input type='submit' onClick={scheduleVisit} value='Schedule' />
+                            </div>
+                        </form>
+
                     </div>
 
-                    <div className="row mt-3">
-                        <div className="col-md-6">
-                            <p className="lbl">Enrollment Number</p>
-                        </div>
-                        <div className="col-md-6">
-                            <p className="lbl">{user.enrollmentNumber}</p>
-                        </div>
-                    </div>
-
-                    <div className="row mt-3">
-                        <div className="col-md-6">
-                            <p className="lbl">Email</p>
-                        </div>
-                        <div className="col-md-6">
-                            <p className="lbl">{user.email}</p>
-                        </div>
-                    </div>
-
-                    <div className="row mt-3">
-                        <div className="col-md-6">
-                            <p className="lbl">Contact Number</p>
-                        </div>
-                        <div className="col-md-6">
-                            <p className="lbl">{user.contactNumber}</p>
-                        </div>
-                    </div>
-
-                    <div className="row mt-3">
-                        <div className="col-md-6">
-                            <p className="lbl">Address</p>
-                        </div>
-                        <div className="col-md-6">
-                            <p className="lbl">{user.address}</p>
-                        </div>
-                    </div>    
-                
-                </div>
+                </div>   
             </div>
+        );
+    }
+    else{
+        return <Navigate to='/login' />;
+    }
+};
 
-        <div className="signin-form">
-            <h2 className="form-title">Schedule a Visit</h2>
-            <p className="visitInstructions"><i>Enter the following details to schedule a visit. If the visit is possible, then check your email for the issue pass.</i></p>
-            <form method="POST" className="register-form" id="register-form">
-                <div className="txt_field">
-                    <input type="text" name="secondPerson" value={visit.secondPerson} onChange={inputHandler} required />
-                    <span></span>
-                    <label>Second Person</label>
-                </div>
-                <div className="txt_field">
-                    <input type="text" name="duration" value={visit.duration} onChange={inputHandler} required />
-                    <span></span>
-                    <label>Duration (in minutes)</label>
-                </div>
-                <div className="txt_field">
-                    <input type="text" name="startTime" value={visit.startTime} onChange={inputHandler} required />
-                    <span></span>
-                    <label>Start Time (format : HH:MM)</label>
-                </div>
-                <div className="scheduleButton">
-                    <input type="submit" onClick={scheduleVisit} value="Schedule" />
-                </div>
-            </form>
-
-        </div>
-
-    </div>
-           
-    );
-
+UserProfile.propTypes = {
+    logoutPressed: PropTypes.func.isRequired,
 };
 
 export default UserProfile;

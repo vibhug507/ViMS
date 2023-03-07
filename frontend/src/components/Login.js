@@ -3,8 +3,8 @@ import {NavLink} from 'react-router-dom';
 import './Login.css';
 import logo from './login.png';
 import './icons/material-design-iconic-font.css';
-import Navbar from './Navbar.js';
 import PropTypes from 'prop-types';
+import Navbar from './Navbar.js';
 
 function Login(props){
 

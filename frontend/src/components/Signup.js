@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Redirect} from 'react-router-dom';
+import {Navigate, NavLink} from 'react-router-dom';
 import './Signup.css';
 import logo from './signup.jpg';
 import './icons/material-design-iconic-font.css';
@@ -101,7 +101,7 @@ function Signup(){
         );
     }
     else{
-        return <Redirect to='/login' />
+        return <Navigate to='/login' />
     }
 };
 

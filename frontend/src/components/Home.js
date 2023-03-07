@@ -1,6 +1,5 @@
 import React from 'react';
 import logo from './instituteLogo.png';
-import './Navbar.js';
 import Navbar from './Navbar.js';
 
 function Home(){
